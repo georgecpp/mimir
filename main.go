@@ -59,7 +59,7 @@ func main() {
 					// we need to send ACK to slack server
 					socketClient.Ack(*event.Request)
 					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
-					err := handler.HandleEventMessage(eventsAPIEvent)
+					err := handler.HandleEventMessage(eventsAPIEvent, client)
 					if err != nil {
 						// TODO: replace with actual error handling
 						log.Fatal(err)

@@ -24,7 +24,7 @@ func HandleHelloCommand(command slack.SlashCommand, client *slack.Client) error 
 	}
 
 	// Greet the user
-	attachment.Text = fmt.Sprintf("Hello %s", command.Text)
+	attachment.Pretext = fmt.Sprintf("Hello, %s", command.Text)
 	attachment.Color = "#4af030"
 
 	// Send the message to the channel

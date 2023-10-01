@@ -33,13 +33,11 @@ func HandleAppMentionEvent(event *slackevents.AppMentionEvent, client *slack.Cli
 	}
 	if strings.Contains(text, "hello") {
 		// Greet the user
-		attachment.Text = fmt.Sprintf("Hello %s", user.Name)
-		attachment.Pretext = "Greetings"
+		attachment.Pretext = fmt.Sprintf("Greetings %s!", user.Name)
 		attachment.Color = "#4af030"
 	} else {
 		// Send a message to the user
-		attachment.Text = fmt.Sprintf("How can I help you %s?", user.Name)
-		attachment.Pretext = "How can I be of service"
+		attachment.Pretext = fmt.Sprintf("How can I help you, %s?", user.Name)
 		attachment.Color = "#3d3d3d"
 	}
 	// Send the message to the channel

@@ -40,7 +40,7 @@ func main() {
 		// Create a for loop that selects either the context cancellation or the events incoming
 		for {
 			select {
-				// case context cancel is called exit the goroutine
+			// case context cancel is called exit the goroutine
 			case <-ctx.Done():
 				log.Println("Shutting down socketmode listener")
 				return
@@ -48,7 +48,7 @@ func main() {
 				// We have a new Events, let's type switch the event
 				// Add more use cases here if you want to listen to other events.
 				switch event.Type {
-					// handle EventAPI events
+				// handle EventAPI events
 				case socketmode.EventTypeEventsAPI:
 					// The Event sent on the channel is not the same as the EventAPI events so we need to type cast it
 					eventsAPIEvent, ok := event.Data.(slackevents.EventsAPIEvent)
@@ -56,14 +56,47 @@ func main() {
 						log.Printf("Could not type cast the event to the EventsAPIEvent: %v\n", event)
 						continue
 					}
-					// we need to send ACK to slack server
-					socketClient.Ack(*event.Request)
 					// Now we have an Events API event, but this event type can in turn be many types, so we actually need another type switch
-					err := handler.HandleEventMessage(eventsAPIEvent, client)
+					payload, err := handler.HandleEventMessage(eventsAPIEvent, client)
 					if err != nil {
 						// TODO: replace with actual error handling
 						log.Fatal(err)
 					}
+					// Don't forget to acknowledge the request
+					// The payload is the response
+					socketClient.Ack(*event.Request, payload)
+
+				// handle Slash Commmands Events
+				case socketmode.EventTypeSlashCommand:
+					// Just like before, type cast to the correct event type, this time a SlashEvent
+					command, ok := event.Data.(slack.SlashCommand)
+					if !ok {
+						log.Printf("Could not type cast the message to a SlashCommand: %v\n", command)
+						continue
+					}
+			
+					// handleSlashCommand will take care of the command
+					payload, err := handler.HandleSlashCommand(command, client)
+					if err != nil {
+						log.Fatal(err)
+					}
+					// Don't forget to acknowledge the request
+					// The payload is the response
+					socketClient.Ack(*event.Request, payload)
+
+				// handle Inreraction Events				
+				case socketmode.EventTypeInteractive:
+					interaction, ok := event.Data.(slack.InteractionCallback)
+					if !ok {
+						log.Printf("Could not type cast the message to a Interaction callback: %v\n", interaction)
+						continue				
+					}
+
+					payload, err := handler.HandleInteractionEvent(interaction, client)
+					if err != nil {
+						log.Fatal(err)
+					}
+					socketClient.Ack(*event.Request, payload)
 				}
 			}
 		}

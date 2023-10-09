@@ -6,7 +6,7 @@ import (
 )
 
 func TestFetchMeme(t *testing.T) {
-	subreddits := []string{"dankmemes", "196", "shitposting", "ProgrammerHumor"}
+	subreddits := []string{"dankmemes", "196", "memes", "ProgrammerHumor"}
 
 	ch := make(chan string)
 

@@ -53,9 +53,12 @@ func FetchMeme(subreddit string, ch chan string) {
 			ch <- data.Data.Children[randomIndex].Data.URL
 			return
 		} else if resp.StatusCode == 429 {
-			fmt.Println("Received 429. Retrying in 1 second...")
+			fmt.Println("Received 429. Retrying...")
 			resp.Body.Close()
-			time.Sleep(1 * time.Second) // Wait for 1 second before retrying
+
+			// Generate a random sleep duration between 0.1 and 1.5 seconds
+			randSleep := 0.1 + rand.Float64()*1.4
+			time.Sleep(time.Duration(randSleep * float64(time.Second)))
 		} else {
 			fmt.Println("Error: Unexpected status code:", resp.StatusCode)
 			resp.Body.Close()

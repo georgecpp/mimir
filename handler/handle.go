@@ -38,6 +38,8 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 		return nil, commands.HandleHelloCommand(command, client)
 	case "/was-this-article-helpful":
 		return commands.HandleIsArticleGood(command, client)
+	case "/meme": 
+		return nil, commands.HandleMemeCommand(command, client)
 	}
 
 	return nil, nil

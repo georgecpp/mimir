@@ -12,6 +12,10 @@ type Config struct {
 	SlackAppToken		string	`mapstructure:"SLACK_APP_TOKEN"`
 	SpotifyClientId		string	`mapstructure:"SPOTIFY_CLIENT_ID"`
 	SpotifyClientSecret	string	`mapstructure:"SPOTIFY_CLIENT_SECRET"`
+	SpotifyRedirectUri	string	`mapstructure:"SPOTIFY_REDIRECT_URI"`
+	SpotifyAuthorizeBaseUrl	string	`mapstructure:"SPOTIFY_AUTHORIZE_BASE_URL"`
+	SpotifyAuthorizeScopesString	string	`mapstructure:"SPOTIFY_AUTHORIZE_SCOPES_STRING"`
+	SpotifyAccessTokenUrl	string	`mapstructure:"SPOTIFY_ACCESS_TOKEN_URL"`
 }
 
 // LoadConfig reads config from file or env variables

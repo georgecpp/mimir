@@ -40,6 +40,8 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 		return commands.HandleIsArticleGood(command, client)
 	case "/meme": 
 		return nil, commands.HandleMemeCommand(command, client)
+	case "/spotify-auth":
+		return nil, commands.HandleSpotifyAuthCommand(command, client)
 	}
 
 	return nil, nil

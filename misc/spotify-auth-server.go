@@ -13,12 +13,6 @@ import (
 	"github.com/tidwall/gjson"     // Import the gjson package
 )
 
-var (
-	redirectURI  = "http://localhost:3000"
-	authorizeURL = "https://accounts.spotify.com/authorize"
-	tokenURL     = "https://accounts.spotify.com/api/token"
-)
-
 func RunSpotifyAuthServer() {
 	config, err := LoadConfig("../");
 	if err != nil {
@@ -33,9 +27,9 @@ func RunSpotifyAuthServer() {
 			return
 		}
 
-		scope := "user-read-playback-state user-modify-playback-state user-read-currently-playing app-remote-control streaming playlist-read-private playlist-read-collaborative playlist-modify-private playlist-modify-public user-read-playback-position user-top-read user-read-recently-played"
+		scope := config.SpotifyAuthorizeScopesString
 
-		url := fmt.Sprintf("%s?%s", authorizeURL, buildQueryParams(config, state, scope))
+		url := fmt.Sprintf("%s?%s", config.SpotifyAuthorizeBaseUrl, buildQueryParams(config, state, scope))
 		c.Redirect(http.StatusTemporaryRedirect, url)
 	})
 
@@ -57,9 +51,9 @@ func RunSpotifyAuthServer() {
 		resp, err := resty.New().R().
 			SetHeader("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(config.SpotifyClientId+":"+config.SpotifyClientSecret))).
 			SetHeader("Content-Type", "application/x-www-form-urlencoded").
-			SetBody(fmt.Sprintf("grant_type=authorization_code&code=%s&redirect_uri=%s", code, redirectURI)).
+			SetBody(fmt.Sprintf("grant_type=authorization_code&code=%s&redirect_uri=%s", code, config.SpotifyRedirectUri)).
 			SetResult(map[string]interface{}{}).
-			Post(tokenURL)
+			Post(config.SpotifyAccessTokenUrl)
 	
 		if err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
@@ -104,7 +98,7 @@ func buildQueryParams(config Config, state string, scope string) string {
 		"response_type": "code",
 		"client_id":     config.SpotifyClientId,
 		"scope":         scope,
-		"redirect_uri":  redirectURI,
+		"redirect_uri":  config.SpotifyRedirectUri,
 		"state":         state,
 	}
 

@@ -25,14 +25,28 @@ func HandleSpotifyAuthCommand(command slack.SlashCommand, client *slack.Client) 
     scope := config.SpotifyAuthorizeScopesString
 
     authURL := fmt.Sprintf("%s?%s", config.SpotifyAuthorizeBaseUrl, buildQueryParams(config, state, scope))
-
-    // Send the URL to the user
-    message := "Click [here] (" + authURL + ") to authenticate with Spotify."
-    _, _, err = client.PostMessage(command.ChannelID, slack.MsgOptionText(message, false))
-    if err != nil {
-		return fmt.Errorf("[spotify-auth] failed to post message: %w", err)
+	
+    // Construct the Slack message attachment
+    attachment := slack.Attachment{
+        Text: "Click here to authenticate with Spotify",
+        CallbackID: "spotify-auth", // This can be any unique identifier for the action
+        Color: "#36a64f", // Optional: Set a color for the attachment
+        Actions: []slack.AttachmentAction{
+            {
+                Name:  "authenticate",
+                Text:  "Click Here",
+                Type:  "button",
+                Value: authURL,
+            },
+        },
     }
-  
+
+    // Send the message with the attachment
+    _, _, err = client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+    if err != nil {
+        return fmt.Errorf("[spotify-auth] failed to post message: %w", err)
+    }
+
     return nil
 }
 

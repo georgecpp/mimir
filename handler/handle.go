@@ -29,7 +29,7 @@ func HandleEventMessage(event slackevents.EventsAPIEvent, client *slack.Client) 
 }
 
 
-// handleSlashCommand will take a slash command and route to the appropriate function
+// HandleSlashCommand will take a slash command and route to the appropriate function
 func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (interface{}, error) {
 	// We need to switch depending on the command
 	switch command.Command {
@@ -47,7 +47,6 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 	return nil, nil
 }
 
-// 
 func HandleInteractionEvent(interaction slack.InteractionCallback, client *slack.Client) (interface{}, error) {
 	// This is where we would handle the interaction
 	// Switch depending on the Type
@@ -56,11 +55,9 @@ func HandleInteractionEvent(interaction slack.InteractionCallback, client *slack
 	switch interaction.Type {
 	case slack.InteractionTypeBlockActions:
 		// This is a block action, so we need to handle it
-
 		for _, action := range interaction.ActionCallback.BlockActions {
 			log.Printf("%+v", action)
 			log.Println("Selected option: ", action.SelectedOptions)
-
 		}
 	}
 	return nil, nil

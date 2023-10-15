@@ -16,6 +16,9 @@ type Config struct {
 	SpotifyAuthorizeBaseUrl	string	`mapstructure:"SPOTIFY_AUTHORIZE_BASE_URL"`
 	SpotifyAuthorizeScopesString	string	`mapstructure:"SPOTIFY_AUTHORIZE_SCOPES_STRING"`
 	SpotifyAccessTokenUrl	string	`mapstructure:"SPOTIFY_ACCESS_TOKEN_URL"`
+	SpotifyBuiltAuthUrlShortenedDefault	string	`mapstructure:"SPOTIFY_BUILT_AUTH_URL_SHORTENED_DEFAULT"`
+	TinyUrlAccessToken	string	`mapstructure:"TINYURL_ACCESS_TOKEN"`
+	TinyUrlApiCreateUrl	string	`mapstructure:"TINYURL_API_CREATE_URL"`
 }
 
 // LoadConfig reads config from file or env variables

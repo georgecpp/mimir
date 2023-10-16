@@ -36,6 +36,7 @@ func main() {
 	defer cancel()
 
 	go listen(ctx,client,socketClient)
+	go misc.RunSpotifyAuthServer();
 
 	socketClient.Run()
 }

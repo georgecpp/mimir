@@ -72,7 +72,7 @@ func RunSpotifyAuthServer() {
 		expiresIn := gjson.Get(string(json), "expires_in").Int()
 	
 		// Use the access token in your application
-		// ...
+		Shared.SetSpotifyAccessToken(accessToken);
 	
 		c.JSON(http.StatusOK, gin.H{
 			"access_token": accessToken,

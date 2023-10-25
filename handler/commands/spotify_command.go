@@ -2,9 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"encoding/json"
-	"net/http"
-
 	"github.com/georgecpp/mimir/misc"
 	"github.com/slack-go/slack"
 )
@@ -30,41 +27,18 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 		return nil, nil
 	}
 
-	// Make a GET request to Spotify API
-	url := "https://api.spotify.com/v1/me/player/currently-playing"
-	req, err := http.NewRequest("GET", url, nil)
+	// Get the currently playing track nice and tidy.
+	currentPlayingTrack, err := misc.GetCurrentPlayingTrack()
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		fmt.Println("GetCurrentPlayingTrack failed with error: %w", err)
+		return nil, nil
 	}
-
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-
-	httpClient := &http.Client{}
-	resp, err := httpClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected response: %s", resp.Status)
-	}
-
-	var data map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %w", err)
-	}
-
-	// Extract the information from 'data'
-	artist := data["item"].(map[string]interface{})["artists"].([]interface{})[0].(map[string]interface{})["name"].(string)
-	song := data["item"].(map[string]interface{})["name"].(string)
-	imageURL := data["item"].(map[string]interface{})["album"].(map[string]interface{})["images"].([]interface{})[1].(map[string]interface{})["url"].(string)
 
 	// Create the image block
-	albumImageBlock := slack.NewImageBlock(imageURL, "Album Cover", "", nil)
+	albumImageBlock := slack.NewImageBlock(currentPlayingTrack.ImageURL, "Album Cover", "", nil)
 
 	// Create the text block with artist and song details
-	textBlock := slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Artist:* %s\n*Song:* %s", artist, song), false, false)
+	textBlock := slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Artist:* %s\n*Song:* %s", currentPlayingTrack.Artist, currentPlayingTrack.Song), false, false)
 
 	// Create the section block with the text and image blocks
 	songMetadataBlock := slack.NewSectionBlock(textBlock, nil, nil)
@@ -94,10 +68,17 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 	}
 
 	 // Post the message to the channel
-	 _, _, err = client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+	 _, slackMessageTimestamp, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
 	 if err != nil {
 		 return nil, fmt.Errorf("failed to post message: %w", err)
 	 }
 
+	 misc.MySpotifyDashboard.CreateSpotifyDashboard(
+		currentPlayingTrack.Artist,
+		currentPlayingTrack.Song,
+		currentPlayingTrack.ImageURL,
+		slackMessageTimestamp,
+	 )
+	 
 	return attachment, nil
 }

@@ -2,10 +2,9 @@ package handler
 
 import (
 	"errors"
-	"log"
-
 	"github.com/georgecpp/mimir/handler/commands"
 	"github.com/georgecpp/mimir/handler/events"
+	"github.com/georgecpp/mimir/handler/interactions"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 )
@@ -52,15 +51,11 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 func HandleInteractionEvent(interaction slack.InteractionCallback, client *slack.Client) (interface{}, error) {
 	// This is where we would handle the interaction
 	// Switch depending on the Type
-	log.Printf("The action called is: %s\n", interaction.ActionID)
-	log.Printf("The response was of type: %s\n", interaction.Type)
-	switch interaction.Type {
-	case slack.InteractionTypeBlockActions:
-		// This is a block action, so we need to handle it
-		for _, action := range interaction.ActionCallback.BlockActions {
-			log.Printf("%+v", action)
-			log.Println("Selected option: ", action.SelectedOptions)
-		}
+	switch interaction.ActionCallback.BlockActions[0].ActionID {
+	case "skip_next":
+		return interactions.HandleSkipNextInteraction(interaction,client)
+	case "skip_previous":
+		return interactions.HandleSkipPreviousInteraction(interaction, client)
 	}
 	return nil, nil
 }

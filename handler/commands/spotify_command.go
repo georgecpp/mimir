@@ -30,45 +30,13 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 	// Get the currently playing track nice and tidy.
 	currentPlayingTrack, err := misc.GetCurrentPlayingTrack()
 	if err != nil {
-		fmt.Println("GetCurrentPlayingTrack failed with error: %w", err)
-		return nil, nil
+		return nil, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
 
-	// Create the image block
-	albumImageBlock := slack.NewImageBlock(currentPlayingTrack.ImageURL, "Album Cover", "", nil)
-
-	// Create the text block with artist and song details
-	textBlock := slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Artist:* %s\n*Song:* %s", currentPlayingTrack.Artist, currentPlayingTrack.Song), false, false)
-
-	// Create the section block with the text and image blocks
-	songMetadataBlock := slack.NewSectionBlock(textBlock, nil, nil)
-
-	// Create buttons for controls
-	previousButton := slack.NewButtonBlockElement("", "skip_previous", slack.NewTextBlockObject(slack.PlainTextType, "⏪", false, false))
-	playPauseButton := slack.NewButtonBlockElement("", "play_pause", slack.NewTextBlockObject(slack.PlainTextType, "▶️/⏸️", false, false))
-	nextButton := slack.NewButtonBlockElement("", "skip_next", slack.NewTextBlockObject(slack.PlainTextType, "⏩", false, false))
-	
-	// Create an action block with buttons
-	actionBlock := slack.NewActionBlock(
-		"controls",
-		previousButton,
-		playPauseButton,
-		nextButton,
-	)
-
-	// Create the attachment
-	attachment := slack.Attachment{
-		Blocks: slack.Blocks{
-			BlockSet: []slack.Block{
-				albumImageBlock,
-				songMetadataBlock,
-				actionBlock,
-			},
-		},
-	}
+	spotifyAttachment := misc.BuildSpotifyAttachment(currentPlayingTrack)
 
 	 // Post the message to the channel
-	 _, slackMessageTimestamp, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+	 _, slackMessageTimestamp, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(spotifyAttachment))
 	 if err != nil {
 		 return nil, fmt.Errorf("failed to post message: %w", err)
 	 }
@@ -78,7 +46,8 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 		currentPlayingTrack.Song,
 		currentPlayingTrack.ImageURL,
 		slackMessageTimestamp,
+		command.ChannelID,
 	 )
 	 
-	return attachment, nil
+	return spotifyAttachment, nil
 }

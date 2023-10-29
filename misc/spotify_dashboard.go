@@ -19,10 +19,43 @@ type SpotifyDashboard struct {
 	ImageURL              string
 	SlackMessageTimestamp string
 	SlackChannelId        string
+	CurrentTrackID        string     // New field to store the track ID
 	mu                    sync.Mutex // Add a sync.Mutex for synchronization
 }
 
 var MySpotifyDashboard SpotifyDashboard
+var stopPolling chan struct{} // Channel to signal stopping the polling
+
+// StartSpotifyPolling starts the polling mechanism
+func StartSpotifyPolling(client *slack.Client) {
+	stopPolling = make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-stopPolling:
+				return // Stop polling when signal is received
+			default:
+				// Polling logic here
+				// For example, update the dashboard
+				_, err := MySpotifyDashboard.AutoUpdateCurrentSpotifyDashboard(client)
+				if err != nil {
+					fmt.Printf("Error updating Spotify dashboard: %v\n", err)
+				}
+
+				// Sleep for a specified interval (e.g., 1 second)
+				time.Sleep(1 * time.Second)
+			}
+		}
+	}()
+}
+
+// StopSpotifyPolling stops the polling mechanism
+func StopSpotifyPolling() {
+	if stopPolling != nil {
+		close(stopPolling)
+	}
+}
 
 // AutoUpdateCurrentSpotifyDashboard updates the SpotifyDashboard with the latest information
 func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Client) (slack.Attachment, error) {
@@ -43,6 +76,12 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 		}
 		return slack.Attachment{}, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
+	// Check if the currently playing track is the same as the one in the dashboard
+	if currentPlayingTrack.Song == sd.Song {
+		// No need to update, as the track is the same
+		return slack.Attachment{}, nil
+	}
+
 	sd.Artist = currentPlayingTrack.Artist
 	sd.Song = currentPlayingTrack.Song
 	sd.ImageURL = currentPlayingTrack.ImageURL

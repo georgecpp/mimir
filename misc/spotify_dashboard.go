@@ -7,62 +7,73 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/slack-go/slack"
 )
 
 // SpotifyDashboard holds the metadata and timestamp of the Spotify message
 type SpotifyDashboard struct {
-    Artist    string
-    Song      string
-    ImageURL  string
-    SlackMessageTimestamp string
-    SlackChannelId string
-    mu        sync.Mutex // Add a sync.Mutex for synchronization
+	Artist                string
+	Song                  string
+	ImageURL              string
+	SlackMessageTimestamp string
+	SlackChannelId        string
+	mu                    sync.Mutex // Add a sync.Mutex for synchronization
 }
 
 var MySpotifyDashboard SpotifyDashboard
 
 // AutoUpdateCurrentSpotifyDashboard updates the SpotifyDashboard with the latest information
 func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Client) (slack.Attachment, error) {
-    sd.mu.Lock()
-    defer sd.mu.Unlock()
+	sd.mu.Lock()
+	defer sd.mu.Unlock()
 
-    currentPlayingTrack, err := GetCurrentPlayingTrack()
+	currentPlayingTrack, err := GetCurrentPlayingTrack()
 	if err != nil {
-		fmt.Println("GetCurrentPlayingTrack failed with error: %w", err)
+		// Check if the error is a 429 response
+		if isRateLimitError(err) {
+			// Retry after the specified time
+			retryAfter, err := getRetryAfterValue(err)
+			if err != nil {
+				return slack.Attachment{}, fmt.Errorf("failed to parse Retry-After header: %w", err)
+			}
+			time.Sleep(time.Duration(retryAfter) * time.Second)
+			return slack.Attachment{}, nil
+		}
+		return slack.Attachment{}, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
-    sd.Artist = currentPlayingTrack.Artist
-    sd.Song = currentPlayingTrack.Song
-    sd.ImageURL = currentPlayingTrack.ImageURL
+	sd.Artist = currentPlayingTrack.Artist
+	sd.Song = currentPlayingTrack.Song
+	sd.ImageURL = currentPlayingTrack.ImageURL
 
-    spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack)
-    _, _, _, err = client.UpdateMessage(
-        sd.SlackChannelId,
-        sd.SlackMessageTimestamp,
-        slack.MsgOptionAttachments(spotifyAttachment),
-    )
-    if err != nil {
-        return slack.Attachment{}, fmt.Errorf("client.UpdateMessage failed to update message: %w", err)
-    }
-    return spotifyAttachment, nil
+	spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack)
+	_, _, _, err = client.UpdateMessage(
+		sd.SlackChannelId,
+		sd.SlackMessageTimestamp,
+		slack.MsgOptionAttachments(spotifyAttachment),
+	)
+	if err != nil {
+		return slack.Attachment{}, fmt.Errorf("client.UpdateMessage failed to update message: %w", err)
+	}
+	return spotifyAttachment, nil
 }
 
 func (sd *SpotifyDashboard) CreateSpotifyDashboard(artist, song, imageURL, timestamp, channelId string) {
-    sd.mu.Lock()
-    defer sd.mu.Unlock()
+	sd.mu.Lock()
+	defer sd.mu.Unlock()
 
-    sd.Artist = artist
-    sd.Song = song
-    sd.ImageURL = imageURL
-    sd.SlackMessageTimestamp = timestamp 
-    sd.SlackChannelId = channelId
+	sd.Artist = artist
+	sd.Song = song
+	sd.ImageURL = imageURL
+	sd.SlackMessageTimestamp = timestamp
+	sd.SlackChannelId = channelId
 }
 
 type CurrentPlayingTrackResponse struct {
-    Artist  string
-    Song    string
-    ImageURL string
+	Artist   string
+	Song     string
+	ImageURL string
 }
 
 func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
@@ -130,7 +141,7 @@ func SkipToNextTrack() error {
 }
 
 func SkipToPreviousTrack() error {
-    accessToken := Shared.GetSpotifyAccessToken()
+	accessToken := Shared.GetSpotifyAccessToken()
 
 	url := "https://api.spotify.com/v1/me/player/previous"
 	req, err := http.NewRequest("POST", url, nil)

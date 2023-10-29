@@ -7,18 +7,19 @@ import (
 // Config stores all configurations of the app
 // the values are read by viper from a config file or env variables
 type Config struct {
-	SlackAuthToken     string  `mapstructure:"SLACK_AUTH_TOKEN"`
-	SlackChannelId		string	`mapstructure:"SLACK_CHANNEL_ID"`
-	SlackAppToken		string	`mapstructure:"SLACK_APP_TOKEN"`
-	SpotifyClientId		string	`mapstructure:"SPOTIFY_CLIENT_ID"`
-	SpotifyClientSecret	string	`mapstructure:"SPOTIFY_CLIENT_SECRET"`
-	SpotifyRedirectUri	string	`mapstructure:"SPOTIFY_REDIRECT_URI"`
-	SpotifyAuthorizeBaseUrl	string	`mapstructure:"SPOTIFY_AUTHORIZE_BASE_URL"`
-	SpotifyAuthorizeScopesString	string	`mapstructure:"SPOTIFY_AUTHORIZE_SCOPES_STRING"`
-	SpotifyAccessTokenUrl	string	`mapstructure:"SPOTIFY_ACCESS_TOKEN_URL"`
-	SpotifyBuiltAuthUrlShortenedDefault	string	`mapstructure:"SPOTIFY_BUILT_AUTH_URL_SHORTENED_DEFAULT"`
-	TinyUrlAccessToken	string	`mapstructure:"TINYURL_ACCESS_TOKEN"`
-	TinyUrlApiCreateUrl	string	`mapstructure:"TINYURL_API_CREATE_URL"`
+	SlackAuthToken                      string `mapstructure:"SLACK_AUTH_TOKEN"`
+	SlackChannelId                      string `mapstructure:"SLACK_CHANNEL_ID"`
+	SlackAppToken                       string `mapstructure:"SLACK_APP_TOKEN"`
+	SpotifyClientId                     string `mapstructure:"SPOTIFY_CLIENT_ID"`
+	SpotifyClientSecret                 string `mapstructure:"SPOTIFY_CLIENT_SECRET"`
+	SpotifyRedirectUri                  string `mapstructure:"SPOTIFY_REDIRECT_URI"`
+	SpotifyAuthorizeBaseUrl             string `mapstructure:"SPOTIFY_AUTHORIZE_BASE_URL"`
+	SpotifyAuthorizeScopesString        string `mapstructure:"SPOTIFY_AUTHORIZE_SCOPES_STRING"`
+	SpotifyAccessTokenUrl               string `mapstructure:"SPOTIFY_ACCESS_TOKEN_URL"`
+	SpotifyAuthSuccessUrl               string `mapstructure:"SPOTIFY_AUTH_SUCCESS_URL"`
+	SpotifyBuiltAuthUrlShortenedDefault string `mapstructure:"SPOTIFY_BUILT_AUTH_URL_SHORTENED_DEFAULT"`
+	TinyUrlAccessToken                  string `mapstructure:"TINYURL_ACCESS_TOKEN"`
+	TinyUrlApiCreateUrl                 string `mapstructure:"TINYURL_API_CREATE_URL"`
 }
 
 // LoadConfig reads config from file or env variables

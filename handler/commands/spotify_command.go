@@ -30,6 +30,21 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 	// Get the currently playing track nice and tidy.
 	currentPlayingTrack, err := misc.GetCurrentPlayingTrack()
 	if err != nil {
+		if err.Error() == "no currently playing track" {
+			// No currently playing track, return a message
+			noTrackMessage := "No track is currently playing."
+			attachment := slack.Attachment{
+				Color: "#36a64f", // Green color
+				Text:  noTrackMessage,
+			}
+
+			_, _, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+			if err != nil {
+				return nil, fmt.Errorf("failed to post message: %w", err)
+			}
+
+			return nil, nil
+		}
 		return nil, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
 

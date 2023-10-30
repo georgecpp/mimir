@@ -133,6 +133,11 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNoContent {
+		// No currently playing track
+		return CurrentPlayingTrackResponse{}, fmt.Errorf("no currently playing track")
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return CurrentPlayingTrackResponse{}, fmt.Errorf("unexpected response: %s", resp.Status)
 	}

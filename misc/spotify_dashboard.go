@@ -76,11 +76,6 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 		}
 		return slack.Attachment{}, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
-	// Check if the currently playing track is the same as the one in the dashboard
-	if currentPlayingTrack.Song == sd.Song {
-		// No need to update, as the track is the same
-		return slack.Attachment{}, nil
-	}
 
 	sd.Artist = currentPlayingTrack.Artist
 	sd.Song = currentPlayingTrack.Song
@@ -110,9 +105,10 @@ func (sd *SpotifyDashboard) CreateSpotifyDashboard(artist, song, imageURL, times
 }
 
 type CurrentPlayingTrackResponse struct {
-	Artist   string
-	Song     string
-	ImageURL string
+	Artist    string
+	Song      string
+	ImageURL  string
+	IsPlaying bool
 }
 
 func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
@@ -151,11 +147,13 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	artist := data["item"].(map[string]interface{})["artists"].([]interface{})[0].(map[string]interface{})["name"].(string)
 	song := data["item"].(map[string]interface{})["name"].(string)
 	imageURL := data["item"].(map[string]interface{})["album"].(map[string]interface{})["images"].([]interface{})[1].(map[string]interface{})["url"].(string)
+	isPlaying := data["is_playing"].(bool)
 
 	return CurrentPlayingTrackResponse{
-		Artist:   artist,
-		Song:     song,
-		ImageURL: imageURL,
+		Artist:    artist,
+		Song:      song,
+		ImageURL:  imageURL,
+		IsPlaying: isPlaying,
 	}, nil
 }
 
@@ -221,7 +219,15 @@ func BuildSpotifyAttachment(track CurrentPlayingTrackResponse) slack.Attachment 
 
 	// Create buttons for controls
 	previousButton := slack.NewButtonBlockElement("skip_previous", "skip_previous", slack.NewTextBlockObject(slack.PlainTextType, "⏪", false, false))
-	playPauseButton := slack.NewButtonBlockElement("play_pause", "play_pause", slack.NewTextBlockObject(slack.PlainTextType, "▶️/⏸️", false, false))
+
+	// Create play/pause button based on track state
+	var playPauseButton *slack.ButtonBlockElement
+	if track.IsPlaying {
+		playPauseButton = slack.NewButtonBlockElement("pause", "pause", slack.NewTextBlockObject(slack.PlainTextType, "⏸️", false, false))
+	} else {
+		playPauseButton = slack.NewButtonBlockElement("play", "play", slack.NewTextBlockObject(slack.PlainTextType, "▶️", false, false))
+	}
+
 	nextButton := slack.NewButtonBlockElement("skip_next", "skip_next", slack.NewTextBlockObject(slack.PlainTextType, "⏩", false, false))
 
 	// Create an action block with buttons

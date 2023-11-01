@@ -19,7 +19,7 @@ type SpotifyDashboard struct {
 	ImageURL              string
 	SlackMessageTimestamp string
 	SlackChannelId        string
-	CurrentTrackID        string     // New field to store the track ID
+	IsPlaying             bool
 	mu                    sync.Mutex // Add a sync.Mutex for synchronization
 }
 
@@ -77,9 +77,17 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 		return slack.Attachment{}, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
 
+	// Check if the currently playing track is the same as the one in the dashboard
+	// and the state is the same
+	if currentPlayingTrack.Song == sd.Song && currentPlayingTrack.IsPlaying == sd.IsPlaying {
+		// No need to update, as the track is the same and the state as well.
+		return slack.Attachment{}, nil
+	}
+
 	sd.Artist = currentPlayingTrack.Artist
 	sd.Song = currentPlayingTrack.Song
 	sd.ImageURL = currentPlayingTrack.ImageURL
+	sd.IsPlaying = currentPlayingTrack.IsPlaying
 
 	spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack)
 	_, _, _, err = client.UpdateMessage(
@@ -93,13 +101,14 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 	return spotifyAttachment, nil
 }
 
-func (sd *SpotifyDashboard) CreateSpotifyDashboard(artist, song, imageURL, timestamp, channelId string) {
+func (sd *SpotifyDashboard) CreateSpotifyDashboard(cpt CurrentPlayingTrackResponse, timestamp string, channelId string) {
 	sd.mu.Lock()
 	defer sd.mu.Unlock()
 
-	sd.Artist = artist
-	sd.Song = song
-	sd.ImageURL = imageURL
+	sd.Artist = cpt.Artist
+	sd.Song = cpt.Song
+	sd.ImageURL = cpt.ImageURL
+	sd.IsPlaying = cpt.IsPlaying
 	sd.SlackMessageTimestamp = timestamp
 	sd.SlackChannelId = channelId
 }

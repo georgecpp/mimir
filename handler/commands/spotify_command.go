@@ -57,9 +57,7 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 	}
 
 	misc.MySpotifyDashboard.CreateSpotifyDashboard(
-		currentPlayingTrack.Artist,
-		currentPlayingTrack.Song,
-		currentPlayingTrack.ImageURL,
+		currentPlayingTrack,
 		slackMessageTimestamp,
 		command.ChannelID,
 	)

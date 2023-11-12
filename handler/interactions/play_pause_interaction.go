@@ -8,7 +8,11 @@ import (
 
 func HandlePlayPauseInteraction(interaction slack.InteractionCallback, client *slack.Client) (interface{}, error) {
 	var err error
-	playing := misc.MySpotifyDashboard.IsPlaying
+	cpt, err := misc.GetCurrentPlayingTrack()
+	if err != nil {
+		return nil, fmt.Errorf("[HandlePlayPauseInteraction]: GetCurrentPlayingTrack failed with error: %w", err)
+	}
+	playing := cpt.IsPlaying
 	if playing {
 		err = misc.PauseTrack()
 		if err != nil {

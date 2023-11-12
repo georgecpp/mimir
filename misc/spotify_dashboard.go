@@ -29,26 +29,26 @@ var stopPolling chan struct{} // Channel to signal stopping the polling
 
 // StartSpotifyPolling starts the polling mechanism
 func StartSpotifyPolling(client *slack.Client) {
-	stopPolling = make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-stopPolling:
-				return // Stop polling when signal is received
-			default:
-				// Polling logic here
-				// For example, update the dashboard
-				_, err := MySpotifyDashboard.AutoUpdateCurrentSpotifyDashboard(client)
-				if err != nil {
-					fmt.Printf("Error updating Spotify dashboard: %v\n", err)
-				}
-
-				// Sleep for a specified interval (e.g., 1 second)
-				time.Sleep(1 * time.Second)
-			}
-		}
-	}()
+	//stopPolling = make(chan struct{})
+	//
+	//go func() {
+	//	for {
+	//		select {
+	//		case <-stopPolling:
+	//			return // Stop polling when signal is received
+	//		default:
+	//			// Polling logic here
+	//			// For example, update the dashboard
+	//			_, err := MySpotifyDashboard.AutoUpdateCurrentSpotifyDashboard(client)
+	//			if err != nil {
+	//				fmt.Printf("Error updating Spotify dashboard: %v\n", err)
+	//			}
+	//
+	//			// Sleep for a specified interval (e.g., 1 second)
+	//			time.Sleep(1 * time.Second)
+	//		}
+	//	}
+	//}()
 }
 
 // StopSpotifyPolling stops the polling mechanism

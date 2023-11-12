@@ -20,6 +20,7 @@ type SpotifyDashboard struct {
 	SlackMessageTimestamp string
 	SlackChannelId        string
 	IsPlaying             bool
+	DeviceId              string
 	mu                    sync.Mutex // Add a sync.Mutex for synchronization
 }
 
@@ -88,6 +89,7 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 	sd.Song = currentPlayingTrack.Song
 	sd.ImageURL = currentPlayingTrack.ImageURL
 	sd.IsPlaying = currentPlayingTrack.IsPlaying
+	sd.DeviceId = currentPlayingTrack.DeviceId
 
 	spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack)
 	_, _, _, err = client.UpdateMessage(
@@ -109,6 +111,7 @@ func (sd *SpotifyDashboard) CreateSpotifyDashboard(cpt CurrentPlayingTrackRespon
 	sd.Song = cpt.Song
 	sd.ImageURL = cpt.ImageURL
 	sd.IsPlaying = cpt.IsPlaying
+	sd.DeviceId = cpt.DeviceId
 	sd.SlackMessageTimestamp = timestamp
 	sd.SlackChannelId = channelId
 }
@@ -118,10 +121,53 @@ type CurrentPlayingTrackResponse struct {
 	Song      string
 	ImageURL  string
 	IsPlaying bool
+	DeviceId  string
+}
+
+// GetActiveDevice retrieves the active device ID
+func GetActiveDevice() (string, error) {
+	// Make a GET request to Spotify API to get the list of devices
+	accessToken := Shared.GetSpotifyAccessToken()
+	devicesURL := "https://api.spotify.com/v1/me/player/devices"
+	devicesReq, err := http.NewRequest("GET", devicesURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create devices request: %w", err)
+	}
+
+	devicesReq.Header.Set("Authorization", "Bearer "+accessToken)
+
+	httpClient := &http.Client{}
+	devicesResp, err := httpClient.Do(devicesReq)
+	if err != nil {
+		return "", fmt.Errorf("failed to make devices request: %w", err)
+	}
+	defer devicesResp.Body.Close()
+
+	if devicesResp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected devices response: %s", devicesResp.Status)
+	}
+
+	var devicesData map[string][]map[string]interface{}
+	if err := json.NewDecoder(devicesResp.Body).Decode(&devicesData); err != nil {
+		return "", fmt.Errorf("failed to decode devices response: %w", err)
+	}
+
+	// Find the active device
+	for _, device := range devicesData["devices"] {
+		if isActive := device["is_active"].(bool); isActive {
+			return device["id"].(string), nil
+		}
+	}
+
+	return "", fmt.Errorf("no active device found")
 }
 
 func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	accessToken := Shared.GetSpotifyAccessToken()
+	deviceId, err := GetActiveDevice()
+	if err != nil {
+		return CurrentPlayingTrackResponse{}, fmt.Errorf("failed to retrieve active device: %w", err)
+	}
 	// Make a GET request to Spotify API
 	url := "https://api.spotify.com/v1/me/player/currently-playing"
 	req, err := http.NewRequest("GET", url, nil)
@@ -163,6 +209,7 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 		Song:      song,
 		ImageURL:  imageURL,
 		IsPlaying: isPlaying,
+		DeviceId:  deviceId,
 	}, nil
 }
 

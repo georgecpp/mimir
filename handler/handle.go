@@ -12,7 +12,7 @@ import (
 // HandleEventMessage will take an event and handle it properly based on the type of event
 func HandleEventMessage(event slackevents.EventsAPIEvent, client *slack.Client) (interface{}, error) {
 	switch event.Type {
-		// first we check if this is an CallbackEvent
+	// first we check if this is an CallbackEvent
 	case slackevents.CallbackEvent:
 		innerEvent := event.InnerEvent
 		// Yet another type switch on the actual Data to see if its an AppMentionEvent
@@ -27,7 +27,6 @@ func HandleEventMessage(event slackevents.EventsAPIEvent, client *slack.Client) 
 	return nil, nil
 }
 
-
 // HandleSlashCommand will take a slash command and route to the appropriate function
 func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (interface{}, error) {
 	// We need to switch depending on the command
@@ -37,7 +36,7 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 		return nil, commands.HandleHelloCommand(command, client)
 	case "/was-this-article-helpful":
 		return commands.HandleIsArticleGood(command, client)
-	case "/meme": 
+	case "/meme":
 		return nil, commands.HandleMemeCommand(command, client)
 	case "/spotify-auth":
 		return nil, commands.HandleSpotifyAuthCommand(command, client)
@@ -53,9 +52,13 @@ func HandleInteractionEvent(interaction slack.InteractionCallback, client *slack
 	// Switch depending on the Type
 	switch interaction.ActionCallback.BlockActions[0].ActionID {
 	case "skip_next":
-		return interactions.HandleSkipNextInteraction(interaction,client)
+		return interactions.HandleSkipNextInteraction(interaction, client)
 	case "skip_previous":
 		return interactions.HandleSkipPreviousInteraction(interaction, client)
+	case "pause":
+		return interactions.HandlePlayPauseInteraction(interaction, client)
+	case "play":
+		return interactions.HandlePlayPauseInteraction(interaction, client)
 	}
 	return nil, nil
 }

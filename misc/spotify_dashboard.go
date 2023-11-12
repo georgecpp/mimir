@@ -166,6 +166,56 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	}, nil
 }
 
+func PauseTrack() error {
+	accessToken := Shared.GetSpotifyAccessToken()
+
+	url := "https://api.spotify.com/v1/me/player/pause"
+	req, err := http.NewRequest("PUT", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("unexpected response: %s", resp.Status)
+	}
+
+	return nil
+}
+
+func StartResumeTrack() error {
+	accessToken := Shared.GetSpotifyAccessToken()
+
+	url := "https://api.spotify.com/v1/me/player/play"
+	req, err := http.NewRequest("PUT", url, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("unexpected response: %s", resp.Status)
+	}
+
+	return nil
+}
+
 func SkipToNextTrack() error {
 	accessToken := Shared.GetSpotifyAccessToken()
 

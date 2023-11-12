@@ -45,6 +45,21 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 
 			return nil, nil
 		}
+		if err.Error() == "failed to retrieve active device" {
+			// No currently playing track, return a message
+			noActiveDeviceMessage := "No active device is currently playing anything!"
+			attachment := slack.Attachment{
+				Color: "#36a64f", // Green color
+				Text:  noActiveDeviceMessage,
+			}
+
+			_, _, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+			if err != nil {
+				return nil, fmt.Errorf("failed to post message: %w", err)
+			}
+
+			return nil, nil
+		}
 		return nil, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
 

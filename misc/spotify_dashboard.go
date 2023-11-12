@@ -166,7 +166,7 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	accessToken := Shared.GetSpotifyAccessToken()
 	deviceId, err := GetActiveDevice()
 	if err != nil {
-		return CurrentPlayingTrackResponse{}, fmt.Errorf("failed to retrieve active device: %w", err)
+		return CurrentPlayingTrackResponse{}, fmt.Errorf("failed to retrieve active device")
 	}
 	// Make a GET request to Spotify API
 	url := "https://api.spotify.com/v1/me/player/currently-playing"

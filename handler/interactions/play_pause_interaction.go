@@ -24,7 +24,9 @@ func HandlePlayPauseInteraction(interaction slack.InteractionCallback, client *s
 			return nil, fmt.Errorf("StartResumeTrack failed with error: %w", err)
 		}
 	}
-	spotifyAttachment, err := misc.MySpotifyDashboard.AutoUpdateCurrentSpotifyDashboard(client)
+	lastAction := interaction.ActionCallback.BlockActions[0].ActionID
+	userName := interaction.User.Name
+	spotifyAttachment, err := misc.MySpotifyDashboard.AutoUpdateCurrentSpotifyDashboard(client, lastAction, userName)
 	if err != nil {
 		return nil, fmt.Errorf("AutoUpdateCurrentSpotifyDashboard failed with error: %w", err)
 	}

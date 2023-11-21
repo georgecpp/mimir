@@ -62,8 +62,7 @@ func HandleSpotifyCommand(command slack.SlashCommand, client *slack.Client) (int
 		}
 		return nil, fmt.Errorf("GetCurrentPlayingTrack failed with error: %w", err)
 	}
-
-	spotifyAttachment := misc.BuildSpotifyAttachment(currentPlayingTrack)
+	spotifyAttachment := misc.BuildSpotifyAttachment(currentPlayingTrack, "/spotify", command.UserName)
 
 	// Post the message to the channel
 	_, slackMessageTimestamp, err := client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(spotifyAttachment))

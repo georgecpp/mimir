@@ -59,7 +59,7 @@ func StopSpotifyPolling() {
 }
 
 // AutoUpdateCurrentSpotifyDashboard updates the SpotifyDashboard with the latest information
-func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Client) (slack.Attachment, error) {
+func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Client, lastAction string, userName string) (slack.Attachment, error) {
 	sd.mu.Lock()
 	defer sd.mu.Unlock()
 
@@ -91,7 +91,7 @@ func (sd *SpotifyDashboard) AutoUpdateCurrentSpotifyDashboard(client *slack.Clie
 	sd.IsPlaying = currentPlayingTrack.IsPlaying
 	sd.DeviceId = currentPlayingTrack.DeviceId
 
-	spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack)
+	spotifyAttachment := BuildSpotifyAttachment(currentPlayingTrack, lastAction, userName)
 	_, _, _, err = client.UpdateMessage(
 		sd.SlackChannelId,
 		sd.SlackMessageTimestamp,
@@ -313,7 +313,15 @@ func SkipToPreviousTrack() error {
 	return nil
 }
 
-func BuildSpotifyAttachment(track CurrentPlayingTrackResponse) slack.Attachment {
+func BuildSpotifyAttachment(track CurrentPlayingTrackResponse, lastAction string, userName string) slack.Attachment {
+
+	// Create a section block for displaying last action and user
+	lastActionBlock := slack.NewSectionBlock(
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Last Action:* %s\n*User:* %s", lastAction, userName), false, false),
+		nil,
+		nil,
+	)
+
 	// Create the image block
 	albumImageBlock := slack.NewImageBlock(track.ImageURL, "Album Cover", "", nil)
 
@@ -351,6 +359,7 @@ func BuildSpotifyAttachment(track CurrentPlayingTrackResponse) slack.Attachment 
 				albumImageBlock,
 				songMetadataBlock,
 				actionBlock,
+				lastActionBlock,
 			},
 		},
 	}

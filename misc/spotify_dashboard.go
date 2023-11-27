@@ -322,6 +322,9 @@ func BuildSpotifyAttachment(track CurrentPlayingTrackResponse, lastAction string
 		nil,
 	)
 
+	// Create a divider block
+	dividerBlock := slack.NewDividerBlock()
+
 	// Create the image block
 	albumImageBlock := slack.NewImageBlock(track.ImageURL, "Album Cover", "", nil)
 
@@ -359,6 +362,7 @@ func BuildSpotifyAttachment(track CurrentPlayingTrackResponse, lastAction string
 				albumImageBlock,
 				songMetadataBlock,
 				actionBlock,
+				dividerBlock,
 				lastActionBlock,
 			},
 		},

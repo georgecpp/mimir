@@ -317,7 +317,7 @@ func BuildSpotifyAttachment(track CurrentPlayingTrackResponse, lastAction string
 
 	// Create a section block for displaying last action and user
 	lastActionBlock := slack.NewSectionBlock(
-		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Last Action:* %s\n*User:* %s", lastAction, userName), false, false),
+		slack.NewTextBlockObject(slack.MarkdownType, fmt.Sprintf("*Last Action:* %s\n*DJ:* %s", lastAction, userName), false, false),
 		nil,
 		nil,
 	)

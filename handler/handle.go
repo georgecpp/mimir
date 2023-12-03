@@ -42,6 +42,8 @@ func HandleSlashCommand(command slack.SlashCommand, client *slack.Client) (inter
 		return nil, commands.HandleSpotifyAuthCommand(command, client)
 	case "/spotify":
 		return commands.HandleSpotifyCommand(command, client)
+	case "/queue":
+		return commands.HandleQueueCommand(command, client)
 	}
 
 	return nil, nil

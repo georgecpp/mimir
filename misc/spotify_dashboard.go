@@ -213,6 +213,76 @@ func GetCurrentPlayingTrack() (CurrentPlayingTrackResponse, error) {
 	}, nil
 }
 
+type UserQueueItem struct {
+	AlbumLogo string
+	SongTitle string
+	Artist    string
+	Duration  string
+}
+
+func GetUserQueue() ([]UserQueueItem, error) {
+	accessToken := Shared.GetSpotifyAccessToken()
+
+	// Make a GET request to Spotify API for the user's queue
+	url := "https://api.spotify.com/v1/me/player/queue"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+
+	httpClient := &http.Client{}
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("unexpected response: %s", resp.Status)
+	}
+
+	var data map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	// Check if the 'queue' key exists in the response and is an array
+	queue, exists := data["queue"].([]interface{})
+	if !exists {
+		return nil, fmt.Errorf("queue not found in response or not an array")
+	}
+
+	var userQueue []UserQueueItem
+
+	// Iterate through the queue items and extract relevant information
+	for _, item := range queue {
+		itemData, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		artist := itemData["artists"].([]interface{})[0].(map[string]interface{})["name"].(string)
+		song := itemData["name"].(string)
+		album := itemData["album"].(map[string]interface{})
+		imageURL := album["images"].([]interface{})[1].(map[string]interface{})["url"].(string)
+		durationMs := int(itemData["duration_ms"].(float64))
+		duration := fmt.Sprintf("%d:%02d", durationMs/60000, (durationMs/1000)%60)
+
+		queueItem := UserQueueItem{
+			AlbumLogo: imageURL,
+			SongTitle: song,
+			Artist:    artist,
+			Duration:  duration,
+		}
+
+		userQueue = append(userQueue, queueItem)
+	}
+
+	return userQueue, nil
+}
+
 func PauseTrack() error {
 	accessToken := Shared.GetSpotifyAccessToken()
 

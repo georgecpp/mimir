@@ -70,10 +70,10 @@ func HandleQueueCommand(command slack.SlashCommand, client *slack.Client) (inter
 	for i, item := range myQueueData[:5] {
 		position := i + 1 // Adjust to start the count from 1 instead of 0
 		// Create the section title dynamically with the position in the queue
-		sectionTitle := slack.NewTextBlockObject("plain_text", fmt.Sprintf("#%d", position), false, false)
+		sectionTitle := slack.NewTextBlockObject("plain_text", fmt.Sprintf("Song #%d", position), false, false)
 		imageBlock := slack.NewImageBlockElement(item.AlbumLogo, "album logo")
 		// Create a text block for the song information
-		songText := fmt.Sprintf("*%s*\t\t\t%s\t\t\t%s", item.SongTitle, item.Artist, item.Duration)
+		songText := fmt.Sprintf("*%s*\n%s\n%s", item.SongTitle, item.Artist, item.Duration)
 		songBlock := slack.NewTextBlockObject("mrkdwn", songText, false, false)
 
 		// Create a section block with the song's text and image blocks as fields
@@ -88,5 +88,10 @@ func HandleQueueCommand(command slack.SlashCommand, client *slack.Client) (inter
 			BlockSet: queueBlocks,
 		},
 	}
+	_, _, err = client.PostMessage(command.ChannelID, slack.MsgOptionAttachments(attachment))
+	if err != nil {
+		return nil, fmt.Errorf("failed to post message: %w", err)
+	}
+
 	return attachment, nil
 }

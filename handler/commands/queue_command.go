@@ -65,7 +65,10 @@ func HandleQueueCommand(command slack.SlashCommand, client *slack.Client) (inter
 
 	myQueueData, err := misc.GetUserQueue()
 
+	headerText := slack.NewTextBlockObject("mrkdwn", "*Coming next in the queue 🎶*", false, false)
+	headerSection := slack.NewSectionBlock(headerText, nil, nil)
 	var queueBlocks []slack.Block
+	queueBlocks = append([]slack.Block{headerSection}, queueBlocks...)
 
 	for i, item := range myQueueData[:5] {
 		position := i + 1 // Adjust to start the count from 1 instead of 0
